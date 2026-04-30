@@ -30,7 +30,7 @@ jobs:
         run: cat build.log
       - name: print ffbuild logs
         if: ${{ failure() }}
-        run: '[[ -f ./src/ffmpeg/ffbuild/config.log ]] && tail -50 ./src/ffmpeg/ffbuild/config.log'
+        run: 'if [[ -f ./src/ffmpeg/ffbuild/config.log ]]; then tail -50 ./src/ffmpeg/ffbuild/config.log; else echo "(no ffbuild/config.log)"; fi'
   build-ios-lts-on-macos-monterey:
     name: ios lts on monterey
     runs-on: macos-12
@@ -56,7 +56,7 @@ jobs:
         run: cat build.log
       - name: print ffbuild logs
         if: ${{ failure() }}
-        run: '[[ -f ./src/ffmpeg/ffbuild/config.log ]] && tail -50 ./src/ffmpeg/ffbuild/config.log'
+        run: 'if [[ -f ./src/ffmpeg/ffbuild/config.log ]]; then tail -50 ./src/ffmpeg/ffbuild/config.log; else echo "(no ffbuild/config.log)"; fi'
   build-macos-main-on-macos-sonoma:
     name: macos main on sonoma
     runs-on: macos-14
@@ -82,7 +82,7 @@ jobs:
         run: cat build.log
       - name: print ffbuild logs
         if: ${{ failure() }}
-        run: '[[ -f ./src/ffmpeg/ffbuild/config.log ]] && tail -50 ./src/ffmpeg/ffbuild/config.log'
+        run: 'if [[ -f ./src/ffmpeg/ffbuild/config.log ]]; then tail -50 ./src/ffmpeg/ffbuild/config.log; else echo "(no ffbuild/config.log)"; fi'
   build-macos-lts-on-macos-monterey:
     name: macos lts on monterey
     runs-on: macos-12
@@ -108,7 +108,7 @@ jobs:
         run: cat build.log
       - name: print ffbuild logs
         if: ${{ failure() }}
-        run: '[[ -f ./src/ffmpeg/ffbuild/config.log ]] && tail -50 ./src/ffmpeg/ffbuild/config.log'
+        run: 'if [[ -f ./src/ffmpeg/ffbuild/config.log ]]; then tail -50 ./src/ffmpeg/ffbuild/config.log; else echo "(no ffbuild/config.log)"; fi'
   build-tvos-main-on-macos-sonoma:
     name: tvos main on sonoma
     runs-on: macos-14
@@ -134,7 +134,7 @@ jobs:
         run: cat build.log
       - name: print ffbuild logs
         if: ${{ failure() }}
-        run: '[[ -f ./src/ffmpeg/ffbuild/config.log ]] && tail -50 ./src/ffmpeg/ffbuild/config.log'
+        run: 'if [[ -f ./src/ffmpeg/ffbuild/config.log ]]; then tail -50 ./src/ffmpeg/ffbuild/config.log; else echo "(no ffbuild/config.log)"; fi'
   build-tvos-lts-on-macos-monterey:
     name: tvos lts on monterey
     runs-on: macos-12
@@ -160,4 +160,4 @@ jobs:
         run: cat build.log
       - name: print ffbuild logs
         if: ${{ failure() }}
-        run: '[[ -f ./src/ffmpeg/ffbuild/config.log ]] && tail -50 ./src/ffmpeg/ffbuild/config.log'
+        run: 'if [[ -f ./src/ffmpeg/ffbuild/config.log ]]; then tail -50 ./src/ffmpeg/ffbuild/config.log; else echo "(no ffbuild/config.log)"; fi'

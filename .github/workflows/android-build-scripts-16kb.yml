@@ -69,7 +69,7 @@ jobs:
         run: '[[ -f build.log ]] && cat build.log || echo "(no build.log)"'
       - name: print ffbuild logs
         if: ${{ failure() }}
-        run: '[[ -f ./src/ffmpeg/ffbuild/config.log ]] && tail -50 ./src/ffmpeg/ffbuild/config.log'
+        run: 'if [[ -f ./src/ffmpeg/ffbuild/config.log ]]; then tail -50 ./src/ffmpeg/ffbuild/config.log; else echo "(no ffbuild/config.log)"; fi'
 
   build-lts-on-linux:
     name: android lts on linux (ndk-r28b-16k)
@@ -111,7 +111,7 @@ jobs:
         run: '[[ -f build.log ]] && cat build.log || echo "(no build.log)"'
       - name: print ffbuild logs
         if: ${{ failure() }}
-        run: '[[ -f ./src/ffmpeg/ffbuild/config.log ]] && tail -50 ./src/ffmpeg/ffbuild/config.log'
+        run: 'if [[ -f ./src/ffmpeg/ffbuild/config.log ]]; then tail -50 ./src/ffmpeg/ffbuild/config.log; else echo "(no ffbuild/config.log)"; fi'
 
   create-release:
     name: create github release
