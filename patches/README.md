@@ -26,6 +26,8 @@ These patches are automatically applied during the GitHub Actions workflow (`bui
 | `ffmpeg-kit-sdl-cmake.patch` | Bump `cmake_minimum_required` to 3.5 for CMake 4.x compatibility | `src/sdl/CMakeLists.txt` |
 | `ffmpeg-kit-x265-cmake.patch` | Fix CMake policies for CMake 4.x compatibility | `tools/patch/cmake/x265/CMakeLists.txt` |
 
+The repository keeps `tools/patch/cmake/x265/CMakeLists.txt` as the **unpatched** CMake overlay template (`CMP0025`/`CMP0054` `OLD`, legacy `cmake_minimum_required` after `project`). CI applies `ffmpeg-kit-x265-cmake.patch` **before** `./android.sh` (workflow `.github/workflows/android-full-gpl-patched.yml`) so the fixes live only under `patches/`.
+
 ## How It Works
 
 1. **Pre-download patches** (like x265) are applied before sources are downloaded
