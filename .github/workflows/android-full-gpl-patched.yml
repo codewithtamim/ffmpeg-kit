@@ -121,7 +121,7 @@ jobs:
                   sys.stderr.write(f"inject: pattern not found in {android_sh}\n")
                   sys.exit(1)
 
-          hook = marker + "\n".join(
+          hook = marker + "\n" + "\n".join(
               [
                   'if [[ -n "${ANDROID_PATCH_ROOT:-}" ]] && [[ -f "${ANDROID_PATCH_ROOT}/patches/android-apply-patches.sh" ]]; then',
                   '  echo "Applying Android patches..."',
