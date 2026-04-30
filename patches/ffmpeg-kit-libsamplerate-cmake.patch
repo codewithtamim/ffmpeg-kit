@@ -1,0 +1,9 @@
+diff --git a/src/libsamplerate/CMakeLists.txt b/src/libsamplerate/CMakeLists.txt
+--- a/src/libsamplerate/CMakeLists.txt
++++ b/src/libsamplerate/CMakeLists.txt
+@@ -1,4 +1,4 @@
+-cmake_minimum_required(VERSION 3.1..3.18)
++cmake_minimum_required(VERSION 3.5..3.18)
+ 
+ # Policies
+ 

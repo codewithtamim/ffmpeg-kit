@@ -1,0 +1,15 @@
+--- a/src/xvidcore/xvidcore/src/encoder.h
++++ b/src/xvidcore/xvidcore/src/encoder.h
+@@ -40,7 +40,12 @@
+  * Types
+  ****************************************************************************/
+ 
++/* ffmpeg-kit-spm: xvid C23 bool */
++#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 202311L
++#include <stdbool.h>
++#else
+ typedef int bool;
++#endif
+ 
+ /*****************************************************************************
+  * Structures

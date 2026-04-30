@@ -1,0 +1,18 @@
+diff --git a/src/gnutls/configure.ac b/src/gnutls/configure.ac
+--- a/src/gnutls/configure.ac
++++ b/src/gnutls/configure.ac
+@@ -355,13 +355,10 @@ dnl
+ dnl check for gtk-doc
+ dnl
+ GTK_DOC_CHECK([1.14],[--flavour no-tmpl])
+ 
+ AM_GNU_GETTEXT([external])
+ AM_GNU_GETTEXT_VERSION([0.19])
+-m4_ifdef([AM_GNU_GETTEXT_REQUIRE_VERSION],[
+-AM_GNU_GETTEXT_REQUIRE_VERSION([0.19])
+-])
+ 
+ AC_C_BIGENDIAN
+ 
+ dnl No fork on MinGW, disable some self-tests until we fix them.
+ dnl Check clock_gettime and pthread_mutex_lock in libc (avoid linking to other libs)
