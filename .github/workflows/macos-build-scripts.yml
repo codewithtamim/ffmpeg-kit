@@ -46,7 +46,7 @@ jobs:
         run: ./macos.sh --xcframework --enable-macos-audiotoolbox --enable-macos-avfoundation --enable-macos-bzip2 --enable-macos-coreimage --enable-macos-libiconv --enable-macos-opencl --enable-macos-opengl --enable-macos-videotoolbox --enable-macos-zlib
       - name: print build logs
         if: ${{ always() }}
-        run: cat build.log
+        run: 'if [[ -f build.log ]]; then cat build.log; else echo "(no build.log)"; fi'
       - name: print ffbuild logs
         if: ${{ failure() }}
         run: 'if [[ -f ./src/ffmpeg/ffbuild/config.log ]]; then tail -50 ./src/ffmpeg/ffbuild/config.log; else echo "(no ffbuild/config.log)"; fi'
@@ -69,7 +69,7 @@ jobs:
         run: ./macos.sh --xcframework --enable-macos-audiotoolbox --enable-macos-avfoundation --enable-macos-bzip2 --enable-macos-coreimage --enable-macos-libiconv --enable-macos-opencl --enable-macos-opengl --enable-macos-videotoolbox --enable-macos-zlib
       - name: print build logs
         if: ${{ always() }}
-        run: cat build.log
+        run: 'if [[ -f build.log ]]; then cat build.log; else echo "(no build.log)"; fi'
       - name: print ffbuild logs
         if: ${{ failure() }}
         run: 'if [[ -f ./src/ffmpeg/ffbuild/config.log ]]; then tail -50 ./src/ffmpeg/ffbuild/config.log; else echo "(no ffbuild/config.log)"; fi'
@@ -92,7 +92,7 @@ jobs:
         run: ./macos.sh --lts --enable-macos-audiotoolbox --enable-macos-bzip2 --enable-macos-coreimage --enable-macos-libiconv --enable-macos-opencl --enable-macos-opengl --enable-macos-videotoolbox --enable-macos-zlib
       - name: print build logs
         if: ${{ always() }}
-        run: cat build.log
+        run: 'if [[ -f build.log ]]; then cat build.log; else echo "(no build.log)"; fi'
       - name: print ffbuild logs
         if: ${{ failure() }}
         run: 'if [[ -f ./src/ffmpeg/ffbuild/config.log ]]; then tail -50 ./src/ffmpeg/ffbuild/config.log; else echo "(no ffbuild/config.log)"; fi'

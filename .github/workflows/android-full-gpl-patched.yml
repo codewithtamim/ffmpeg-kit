@@ -155,7 +155,7 @@ jobs:
 
       - name: print build logs
         if: ${{ always() }}
-        run: '[[ -f build.log ]] && cat build.log || echo "(no build.log)"'
+        run: 'if [[ -f build.log ]]; then cat build.log; else echo "(no build.log)"; fi'
 
       - name: print ffbuild logs
         if: ${{ failure() }}

@@ -46,7 +46,7 @@ jobs:
         run: ./tvos.sh --xcframework --enable-tvos-bzip2 --enable-tvos-audiotoolbox --enable-tvos-libiconv --enable-tvos-videotoolbox --enable-tvos-zlib
       - name: print build logs
         if: ${{ always() }}
-        run: cat build.log
+        run: 'if [[ -f build.log ]]; then cat build.log; else echo "(no build.log)"; fi'
       - name: print ffbuild logs
         if: ${{ failure() }}
         run: 'if [[ -f ./src/ffmpeg/ffbuild/config.log ]]; then tail -50 ./src/ffmpeg/ffbuild/config.log; else echo "(no ffbuild/config.log)"; fi'
@@ -69,7 +69,7 @@ jobs:
         run: ./tvos.sh --xcframework --enable-tvos-bzip2 --enable-tvos-audiotoolbox --enable-tvos-libiconv --enable-tvos-videotoolbox --enable-tvos-zlib
       - name: print build logs
         if: ${{ always() }}
-        run: cat build.log
+        run: 'if [[ -f build.log ]]; then cat build.log; else echo "(no build.log)"; fi'
       - name: print ffbuild logs
         if: ${{ failure() }}
         run: 'if [[ -f ./src/ffmpeg/ffbuild/config.log ]]; then tail -50 ./src/ffmpeg/ffbuild/config.log; else echo "(no ffbuild/config.log)"; fi'
@@ -92,7 +92,7 @@ jobs:
         run: ./tvos.sh --lts --enable-tvos-bzip2 --enable-tvos-audiotoolbox --enable-tvos-libiconv --enable-tvos-zlib
       - name: print build logs
         if: ${{ always() }}
-        run: cat build.log
+        run: 'if [[ -f build.log ]]; then cat build.log; else echo "(no build.log)"; fi'
       - name: print ffbuild logs
         if: ${{ failure() }}
         run: 'if [[ -f ./src/ffmpeg/ffbuild/config.log ]]; then tail -50 ./src/ffmpeg/ffbuild/config.log; else echo "(no ffbuild/config.log)"; fi'

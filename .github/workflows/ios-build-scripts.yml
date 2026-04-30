@@ -46,7 +46,7 @@ jobs:
         run: ./ios.sh --xcframework --enable-ios-audiotoolbox --enable-ios-avfoundation --enable-ios-bzip2 --enable-ios-libiconv --enable-ios-videotoolbox --enable-ios-zlib
       - name: print build logs
         if: ${{ always() }}
-        run: cat build.log
+        run: 'if [[ -f build.log ]]; then cat build.log; else echo "(no build.log)"; fi'
       - name: print ffbuild logs
         if: ${{ failure() }}
         run: 'if [[ -f ./src/ffmpeg/ffbuild/config.log ]]; then tail -50 ./src/ffmpeg/ffbuild/config.log; else echo "(no ffbuild/config.log)"; fi'
@@ -69,7 +69,7 @@ jobs:
         run: ./ios.sh --xcframework --enable-ios-audiotoolbox --enable-ios-avfoundation --enable-ios-bzip2 --enable-ios-libiconv --enable-ios-videotoolbox --enable-ios-zlib
       - name: print build logs
         if: ${{ always() }}
-        run: cat build.log
+        run: 'if [[ -f build.log ]]; then cat build.log; else echo "(no build.log)"; fi'
       - name: print ffbuild logs
         if: ${{ failure() }}
         run: 'if [[ -f ./src/ffmpeg/ffbuild/config.log ]]; then tail -50 ./src/ffmpeg/ffbuild/config.log; else echo "(no ffbuild/config.log)"; fi'
@@ -92,7 +92,7 @@ jobs:
         run: ./ios.sh --lts --enable-ios-audiotoolbox --enable-ios-bzip2 --enable-ios-libiconv --enable-ios-zlib
       - name: print build logs
         if: ${{ always() }}
-        run: cat build.log
+        run: 'if [[ -f build.log ]]; then cat build.log; else echo "(no build.log)"; fi'
       - name: print ffbuild logs
         if: ${{ failure() }}
         run: 'if [[ -f ./src/ffmpeg/ffbuild/config.log ]]; then tail -50 ./src/ffmpeg/ffbuild/config.log; else echo "(no ffbuild/config.log)"; fi'

@@ -27,7 +27,7 @@ jobs:
         run: PATH="/usr/local/opt/bison/bin:$PATH" XML_CATALOG_FILES="/usr/local/etc/xml/catalog" ./ios.sh -x --full --enable-gpl --disable-lib-srt --disable-lib-gnutls
       - name: print build logs
         if: ${{ always() }}
-        run: cat build.log
+        run: 'if [[ -f build.log ]]; then cat build.log; else echo "(no build.log)"; fi'
       - name: print ffbuild logs
         if: ${{ failure() }}
         run: 'if [[ -f ./src/ffmpeg/ffbuild/config.log ]]; then tail -50 ./src/ffmpeg/ffbuild/config.log; else echo "(no ffbuild/config.log)"; fi'
@@ -53,7 +53,7 @@ jobs:
         run: PATH="/usr/local/opt/bison/bin:$PATH" XML_CATALOG_FILES="/usr/local/etc/xml/catalog" ./ios.sh -l --full --enable-gpl --disable-lib-srt --disable-lib-gnutls --disable-armv7s --disable-arm64e --disable-i386
       - name: print build logs
         if: ${{ always() }}
-        run: cat build.log
+        run: 'if [[ -f build.log ]]; then cat build.log; else echo "(no build.log)"; fi'
       - name: print ffbuild logs
         if: ${{ failure() }}
         run: 'if [[ -f ./src/ffmpeg/ffbuild/config.log ]]; then tail -50 ./src/ffmpeg/ffbuild/config.log; else echo "(no ffbuild/config.log)"; fi'
@@ -79,7 +79,7 @@ jobs:
         run: PATH="/usr/local/opt/bison/bin:$PATH" XML_CATALOG_FILES="/usr/local/etc/xml/catalog" ./macos.sh -x --full --enable-gpl --disable-lib-srt --disable-lib-gnutls
       - name: print build logs
         if: ${{ always() }}
-        run: cat build.log
+        run: 'if [[ -f build.log ]]; then cat build.log; else echo "(no build.log)"; fi'
       - name: print ffbuild logs
         if: ${{ failure() }}
         run: 'if [[ -f ./src/ffmpeg/ffbuild/config.log ]]; then tail -50 ./src/ffmpeg/ffbuild/config.log; else echo "(no ffbuild/config.log)"; fi'
@@ -105,7 +105,7 @@ jobs:
         run: PATH="/usr/local/opt/bison/bin:$PATH" XML_CATALOG_FILES="/usr/local/etc/xml/catalog" ./macos.sh -l --full --enable-gpl --disable-lib-srt --disable-lib-gnutls
       - name: print build logs
         if: ${{ always() }}
-        run: cat build.log
+        run: 'if [[ -f build.log ]]; then cat build.log; else echo "(no build.log)"; fi'
       - name: print ffbuild logs
         if: ${{ failure() }}
         run: 'if [[ -f ./src/ffmpeg/ffbuild/config.log ]]; then tail -50 ./src/ffmpeg/ffbuild/config.log; else echo "(no ffbuild/config.log)"; fi'
@@ -131,7 +131,7 @@ jobs:
         run: PATH="/usr/local/opt/bison/bin:$PATH" XML_CATALOG_FILES="/usr/local/etc/xml/catalog" ./tvos.sh -x --full --enable-gpl --disable-lib-srt --disable-lib-gnutls
       - name: print build logs
         if: ${{ always() }}
-        run: cat build.log
+        run: 'if [[ -f build.log ]]; then cat build.log; else echo "(no build.log)"; fi'
       - name: print ffbuild logs
         if: ${{ failure() }}
         run: 'if [[ -f ./src/ffmpeg/ffbuild/config.log ]]; then tail -50 ./src/ffmpeg/ffbuild/config.log; else echo "(no ffbuild/config.log)"; fi'
@@ -157,7 +157,7 @@ jobs:
         run: PATH="/usr/local/opt/bison/bin:$PATH" XML_CATALOG_FILES="/usr/local/etc/xml/catalog" ./tvos.sh -l --full --enable-gpl --disable-lib-srt --disable-lib-gnutls
       - name: print build logs
         if: ${{ always() }}
-        run: cat build.log
+        run: 'if [[ -f build.log ]]; then cat build.log; else echo "(no build.log)"; fi'
       - name: print ffbuild logs
         if: ${{ failure() }}
         run: 'if [[ -f ./src/ffmpeg/ffbuild/config.log ]]; then tail -50 ./src/ffmpeg/ffbuild/config.log; else echo "(no ffbuild/config.log)"; fi'

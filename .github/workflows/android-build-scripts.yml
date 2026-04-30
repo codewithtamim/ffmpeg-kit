@@ -52,7 +52,7 @@ jobs:
         run: ./android.sh -d --enable-android-media-codec --enable-android-zlib --disable-arm-v7a
       - name: print build logs
         if: ${{ always() }}
-        run: cat build.log
+        run: 'if [[ -f build.log ]]; then cat build.log; else echo "(no build.log)"; fi'
       - name: print ffbuild logs
         if: ${{ failure() }}
         run: 'if [[ -f ./src/ffmpeg/ffbuild/config.log ]]; then tail -50 ./src/ffmpeg/ffbuild/config.log; else echo "(no ffbuild/config.log)"; fi'
@@ -83,7 +83,7 @@ jobs:
         run: ./android.sh -d --lts --enable-android-media-codec --enable-android-zlib
       - name: print build logs
         if: ${{ always() }}
-        run: cat build.log
+        run: 'if [[ -f build.log ]]; then cat build.log; else echo "(no build.log)"; fi'
       - name: print ffbuild logs
         if: ${{ failure() }}
         run: 'if [[ -f ./src/ffmpeg/ffbuild/config.log ]]; then tail -50 ./src/ffmpeg/ffbuild/config.log; else echo "(no ffbuild/config.log)"; fi'
@@ -112,7 +112,7 @@ jobs:
         run: ./android.sh -d --enable-android-media-codec --enable-android-zlib --disable-arm-v7a
       - name: print build logs
         if: ${{ always() }}
-        run: cat build.log
+        run: 'if [[ -f build.log ]]; then cat build.log; else echo "(no build.log)"; fi'
       - name: print ffbuild logs
         if: ${{ failure() }}
         run: 'if [[ -f ./src/ffmpeg/ffbuild/config.log ]]; then tail -50 ./src/ffmpeg/ffbuild/config.log; else echo "(no ffbuild/config.log)"; fi'
@@ -141,7 +141,7 @@ jobs:
         run: ./android.sh -d --lts --enable-android-media-codec --enable-android-zlib
       - name: print build logs
         if: ${{ always() }}
-        run: cat build.log
+        run: 'if [[ -f build.log ]]; then cat build.log; else echo "(no build.log)"; fi'
       - name: print ffbuild logs
         if: ${{ failure() }}
         run: 'if [[ -f ./src/ffmpeg/ffbuild/config.log ]]; then tail -50 ./src/ffmpeg/ffbuild/config.log; else echo "(no ffbuild/config.log)"; fi'
@@ -172,7 +172,7 @@ jobs:
         run: ./android.sh --no-ffmpeg-kit-protocols --disable-x86 --disable-x86-64 --disable-arm-v7a --disable-arm-v7a-neon
       - name: print build logs
         if: ${{ always() }}
-        run: cat build.log
+        run: 'if [[ -f build.log ]]; then cat build.log; else echo "(no build.log)"; fi'
       - name: print ffbuild logs
         if: ${{ failure() }}
         run: 'if [[ -f ./src/ffmpeg/ffbuild/config.log ]]; then tail -50 ./src/ffmpeg/ffbuild/config.log; else echo "(no ffbuild/config.log)"; fi'
