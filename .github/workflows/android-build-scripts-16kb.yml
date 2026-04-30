@@ -1,7 +1,17 @@
 name: android build scripts
 
 on:
-  workflow_dispatch: # Allows manual triggering, which will create a release
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag (e.g., v6.0.2-full-gpl-lts)'
+        required: true
+        type: string
+      ffmpeg_kit_ref:
+        description: 'Git ref to build from (e.g., main, development, or a tag)'
+        required: true
+        default: 'main'
+        type: string
   push:
     branches:
       - development
@@ -25,7 +35,172 @@ on:
       - 'tools/**'
       - 'android.sh'
 
+env:
+  ANDROID_PATCH_ROOT: ${{ github.workspace }}
+
 jobs:
+  build-full-gpl-lts-on-linux:
+    name: android full gpl lts on linux (ndk-r28b)
+    runs-on: ubuntu-22.04
+    if: github.event_name == 'workflow_dispatch'
+    permissions:
+      contents: write
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ffmpeg_kit_ref }}
+          fetch-depth: 0
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: set up adopt jdk 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'adopt'
+          java-version: '17'
+
+      - name: prerequisites
+        run: ${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager --uninstall "cmake;3.10.2.4988404" "cmake;3.18.1"
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            autoconf \
+            automake \
+            libtool \
+            pkg-config \
+            curl \
+            git \
+            nasm \
+            cmake \
+            texinfo \
+            yasm \
+            bison \
+            autogen \
+            wget \
+            gettext \
+            meson \
+            ninja-build \
+            gperf \
+            groff \
+            gtk-doc-tools \
+            docbook-utils \
+            docbook-xsl \
+            libtasn1-6-dev \
+            perl \
+            python3
+
+      - name: set up android ndk r28b
+        run: |
+          curl -sL "https://dl.google.com/android/repository/android-ndk-r28b-linux.zip" -o ndk.zip
+          unzip -q -o ndk.zip -d $HOME/ndk
+          echo "ANDROID_NDK_ROOT=$HOME/ndk/android-ndk-r28b" >> $GITHUB_ENV
+          echo "ANDROID_NDK=$HOME/ndk/android-ndk-r28b" >> $GITHUB_ENV
+
+      - name: Apply x265 CMake patch (pre-download)
+        run: |
+          X265_PATCH="${{ github.workspace }}/patches/ffmpeg-kit-x265-cmake.patch"
+          X265_CMAKE="tools/patch/cmake/x265/CMakeLists.txt"
+          if [ -f "$X265_PATCH" ] && [ -f "$X265_CMAKE" ]; then
+            if grep -q 'cmake_policy(SET CMP0025 OLD)' "$X265_CMAKE"; then
+              echo "Applying x265 CMake patch for CMake 4.x..."
+              patch -p1 --fuzz=0 < "$X265_PATCH" || exit 1
+              echo "x265 patch applied successfully"
+            else
+              echo "x265 CMakeLists.txt already patched or different version"
+            fi
+          else
+            echo "x265 patch or target not found, skipping"
+          fi
+
+      - name: Inject patch hook into android.sh
+        run: |
+          python3 << 'PYEOF'
+          import sys
+
+          android_sh = "android.sh"
+          marker = "# android-ffmpeg-kit: post-download C/CMake patches (C23, CMake 4.x)"
+
+          with open(android_sh, 'r') as f:
+              content = f.read()
+
+          if "android-ffmpeg-kit: post-download" in content:
+              print("Patch hook already injected")
+              sys.exit(0)
+
+          needle = 'downloaded_library_sources "${ENABLED_LIBRARIES[@]}"\n'
+          if needle not in content:
+              needle = "downloaded_library_sources \"\${ENABLED_LIBRARIES[@]}\"\n"
+              if needle not in content:
+                  sys.stderr.write(f"inject: pattern not found in {android_sh}\n")
+                  sys.exit(1)
+
+          hook = marker + '''
+if [[ -n "${ANDROID_PATCH_ROOT:-}" ]] && [[ -f "${ANDROID_PATCH_ROOT}/patches/android-apply-patches.sh" ]]; then
+  echo "Applying Android patches..."
+  ANDROID_PATCH_ROOT="${ANDROID_PATCH_ROOT}" BASEDIR="${BASEDIR}" bash "${ANDROID_PATCH_ROOT}/patches/android-apply-patches.sh" || exit 1
+fi
+
+'''
+
+          with open(android_sh, 'w') as f:
+              f.write(content.replace(needle, needle + hook, 1))
+
+          print("Patch hook injected successfully")
+          PYEOF
+
+      - name: run the build script (full gpl lts)
+        run: |
+          ./android.sh -d --lts --full --enable-gpl --enable-android-media-codec --enable-android-zlib
+
+      - name: prepare aar for release
+        run: |
+          AAR_PATH=$(find prebuilt -type f -name 'ffmpeg-kit.aar')
+          if [ -z "$AAR_PATH" ]; then
+            echo "Error: ffmpeg-kit.aar not found in prebuilt directory."
+            exit 1
+          fi
+          mkdir -p release-assets
+          cp "$AAR_PATH" "release-assets/ffmpeg-kit-full-gpl-lts-${{ inputs.tag }}.aar"
+          ls -lh release-assets/
+
+      - name: print build logs
+        if: ${{ always() }}
+        run: cat build.log
+
+      - name: print ffbuild logs
+        if: ${{ failure() }}
+        run: '[[ -f ./src/ffmpeg/ffbuild/config.log ]] && tail -50 ./src/ffmpeg/ffbuild/config.log'
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.tag }}
+          name: FFmpegKit Android ${{ inputs.tag }}
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+          files: |
+            release-assets/*.aar
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload build artifacts
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: build-logs-${{ inputs.tag }}
+          path: |
+            build.log
+            src/ffmpeg/ffbuild/config.log
+          if-no-files-found: ignore
+
   build-main-on-linux:
     name: android main on linux (ndk-r25-16k)
     runs-on: ubuntu-22.04
@@ -112,10 +287,8 @@ jobs:
 
   create-release:
     name: create github release
-    # This job will only start if BOTH of the jobs above complete successfully.
     needs: [build-main-on-linux, build-lts-on-linux]
     runs-on: ubuntu-latest
-    # This job will only run if the workflow is started manually.
     if: github.event_name == 'workflow_dispatch'
     permissions:
       contents: write
