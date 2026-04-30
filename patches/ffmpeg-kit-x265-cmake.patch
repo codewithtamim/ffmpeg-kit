@@ -6,7 +6,8 @@ diff --git a/tools/patch/cmake/x265/CMakeLists.txt b/tools/patch/cmake/x265/CMak
  # vim: syntax=cmake
  if(NOT CMAKE_BUILD_TYPE)
      # default to Release build for GCC builds
-@@ -7,14 +8,13 @@ endif()
+@@ -7,17 +8,16 @@ if(NOT CMAKE_BUILD_TYPE)
+ endif()
  message(STATUS "cmake version ${CMAKE_VERSION}")
  if(POLICY CMP0025)
 -    cmake_policy(SET CMP0025 OLD) # report Apple's Clang as just Clang
@@ -23,3 +24,5 @@ diff --git a/tools/patch/cmake/x265/CMakeLists.txt b/tools/patch/cmake/x265/CMak
  project (x265)
 -cmake_minimum_required (VERSION 2.8.8) # OBJECT libraries require 2.8.8
  include(CheckIncludeFiles)
+ include(CheckFunctionExists)
+ include(CheckSymbolExists)
