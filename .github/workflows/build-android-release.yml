@@ -33,13 +33,13 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Set up JDK 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
           java-version: '17'
 
       - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@v2
 
       - name: Download and setup Android NDK r28b
         run: |
@@ -196,7 +196,7 @@ fi
           ls -lh "$DEST_AAR"
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ inputs.tag }}
           name: FFmpegKit Android ${{ inputs.tag }}
@@ -209,7 +209,7 @@ fi
 
       - name: Upload build artifacts
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v3
         with:
           name: build-logs-${{ inputs.tag }}
           path: |
