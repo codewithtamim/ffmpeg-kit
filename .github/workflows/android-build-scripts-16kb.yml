@@ -17,7 +17,7 @@ on:
       - development
       - main
     paths:
-      - '.github/workflows/android-build-scripts.yml'
+      - '.github/workflows/android-build-scripts-16kb.yml'
       - 'android/**'
       - '!android/README.md'
       - 'scripts/**'
@@ -28,7 +28,7 @@ on:
       - development
       - main
     paths:
-      - '.github/workflows/android-build-scripts.yml'
+      - '.github/workflows/android-build-scripts-16kb.yml'
       - 'android/**'
       - '!android/README.md'
       - 'scripts/**'
@@ -142,13 +142,16 @@ jobs:
                   sys.stderr.write(f"inject: pattern not found in {android_sh}\n")
                   sys.exit(1)
 
-          hook = marker + '''
-if [[ -n "${ANDROID_PATCH_ROOT:-}" ]] && [[ -f "${ANDROID_PATCH_ROOT}/patches/android-apply-patches.sh" ]]; then
-  echo "Applying Android patches..."
-  ANDROID_PATCH_ROOT="${ANDROID_PATCH_ROOT}" BASEDIR="${BASEDIR}" bash "${ANDROID_PATCH_ROOT}/patches/android-apply-patches.sh" || exit 1
-fi
-
-'''
+          hook = marker + "\n".join(
+              [
+                  'if [[ -n "${ANDROID_PATCH_ROOT:-}" ]] && [[ -f "${ANDROID_PATCH_ROOT}/patches/android-apply-patches.sh" ]]; then',
+                  '  echo "Applying Android patches..."',
+                  '  ANDROID_PATCH_ROOT="${ANDROID_PATCH_ROOT}" BASEDIR="${BASEDIR}" bash "${ANDROID_PATCH_ROOT}/patches/android-apply-patches.sh" || exit 1',
+                  "fi",
+                  "",
+                  "",
+              ]
+          )
 
           with open(android_sh, 'w') as f:
               f.write(content.replace(needle, needle + hook, 1))
