@@ -20,6 +20,9 @@ esac
 mkdir -p "${BUILD_DIR}" || return 1
 cd "${BUILD_DIR}" || return 1
 
+# Use the same top-level CMakeLists as Apple builds (CMake 4.x / policy fixes; see tools/patch/cmake/x265).
+overwrite_file "${BASEDIR}"/tools/patch/cmake/x265/CMakeLists.txt "${BASEDIR}"/src/"${LIB_NAME}"/source/CMakeLists.txt || return 1
+
 # WORKAROUND TO FIX static_assert ERRORS
 ${SED_INLINE} 's/gnu++98/c++11/g' "${BASEDIR}"/src/"${LIB_NAME}"/source/CMakeLists.txt || return 1
 
