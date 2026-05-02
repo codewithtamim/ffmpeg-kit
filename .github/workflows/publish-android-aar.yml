@@ -95,7 +95,22 @@ jobs:
         run: |
           set -euo pipefail
           NDK_ROOT="${ANDROID_NDK_ROOT:-${HOME}/ndk/android-ndk-r28b}"
-          REV="$(grep -E '^Revision' "${NDK_ROOT}/source.properties" | cut -d= -f2 | tr -d ' ')"
+          if [[ ! -f "${NDK_ROOT}/source.properties" ]]; then
+            echo "ERROR: ${NDK_ROOT}/source.properties not found" >&2
+            ls -la "${NDK_ROOT}" >&2 || true
+            exit 1
+          fi
+          # NDK r26+ uses Pkg.Revision (not plain Revision); piped grep can trip set -e.
+          REV="$(awk -F'=' '/^Pkg\.Revision/ {gsub(/^[ \t]+|[ \t]+$/, "", $2); print $2; exit}' "${NDK_ROOT}/source.properties")"
+          if [[ -z "${REV}" ]]; then
+            REV="$(awk -F'=' '/^Revision=/ {gsub(/^[ \t]+|[ \t]+$/, "", $2); print $2; exit}' "${NDK_ROOT}/source.properties")"
+          fi
+          if [[ -z "${REV}" ]]; then
+            echo "ERROR: could not parse NDK revision from source.properties" >&2
+            cat "${NDK_ROOT}/source.properties" >&2
+            exit 1
+          fi
+          echo "INFO: Gradle ndkVersion <- ${REV}"
           perl -i -pe "s/ndkVersion \"[^\"]*\"/ndkVersion \"${REV}\"/" tools/android/build.lts.gradle
 
       - name: Build full GPL LTS AAR (same flags as local Mac)
