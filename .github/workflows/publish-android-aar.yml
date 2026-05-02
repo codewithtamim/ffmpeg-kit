@@ -57,12 +57,26 @@ jobs:
           set -euo pipefail
           SDK_ROOT="${ANDROID_SDK_ROOT}"
           mkdir -p "${SDK_ROOT}/cmdline-tools"
+          rm -rf "${SDK_ROOT}/cmdline-tools/latest" /tmp/android-clt
           CL_TOOLS_ZIP="/tmp/commandlinetools-mac.zip"
           curl -fsSL "https://dl.google.com/android/repository/commandlinetools-mac-11076708_latest.zip" -o "${CL_TOOLS_ZIP}"
           unzip -q -o "${CL_TOOLS_ZIP}" -d /tmp/android-clt
-          mv /tmp/android-clt/cmdline-tools "${SDK_ROOT}/cmdline-tools/latest"
+          # Zip is either cmdline-tools/{bin,lib,...} or cmdline-tools/cmdline-tools/...
+          if [[ -x /tmp/android-clt/cmdline-tools/bin/sdkmanager ]]; then
+            mv /tmp/android-clt/cmdline-tools "${SDK_ROOT}/cmdline-tools/latest"
+          elif [[ -x /tmp/android-clt/cmdline-tools/cmdline-tools/bin/sdkmanager ]]; then
+            mv /tmp/android-clt/cmdline-tools/cmdline-tools "${SDK_ROOT}/cmdline-tools/latest"
+          else
+            echo "ERROR: sdkmanager not found after unzip; listing:" >&2
+            find /tmp/android-clt -maxdepth 4 -type f -name sdkmanager 2>/dev/null || true
+            exit 1
+          fi
           SDKM="${SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager"
+          chmod +x "${SDKM}" 2>/dev/null || true
+          # pipefail + yes|sdkmanager: yes exits 141 on SIGPIPE when sdkmanager stops reading — disable pipefail here.
+          set +o pipefail
           yes | "${SDKM}" --sdk_root="${SDK_ROOT}" --licenses >/dev/null
+          set -o pipefail
           "${SDKM}" --sdk_root="${SDK_ROOT}" --install \
             "platform-tools" "platforms;android-35" "build-tools;35.0.0"
           echo "ANDROID_HOME=${SDK_ROOT}" >> "$GITHUB_ENV"
