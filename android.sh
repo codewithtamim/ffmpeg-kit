@@ -23,7 +23,10 @@ enable_default_android_libraries
 enable_main_build
 
 # DETECT ANDROID NDK VERSION
-export DETECTED_NDK_VERSION=$(grep -Eo "Revision.*" "${ANDROID_NDK_ROOT}"/source.properties | sed 's/Revision//g;s/=//g;s/ //g')
+export DETECTED_NDK_VERSION="$(awk -F'=' '/^Pkg\.Revision/ {gsub(/^[ \t]+|[ \t]+$/, "", $2); print $2; exit}' "${ANDROID_NDK_ROOT}/source.properties")"
+if [[ -z "${DETECTED_NDK_VERSION}" ]]; then
+  export DETECTED_NDK_VERSION=$(grep -Eo "Revision.*" "${ANDROID_NDK_ROOT}"/source.properties | sed 's/Revision//g;s/=//g;s/ //g')
+fi
 echo -e "\nINFO: Using Android NDK v${DETECTED_NDK_VERSION} provided at ${ANDROID_NDK_ROOT}\n" 1>>"${BASEDIR}"/build.log 2>&1
 echo -e "INFO: Build options: $*\n" 1>>"${BASEDIR}"/build.log 2>&1
 

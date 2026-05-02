@@ -18,6 +18,9 @@ env:
   ANDROID_PATCH_ROOT: ${{ github.workspace }}
   ANDROID_SDK_ROOT: ${{ github.workspace }}/.android-sdk
   BASEDIR: ${{ github.workspace }}
+  GIT_TERMINAL_PROMPT: "0"
+  # Use Actions Node 24 for actions when available (quiet deprecation noise).
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   build-and-publish:
@@ -51,6 +54,7 @@ jobs:
             autogen wget gettext meson ninja gperf groff libtasn1
           brew install gtk-doc docbook-xsl || true
           echo "$(brew --prefix bison)/bin" >> "$GITHUB_PATH"
+          echo "$(brew --prefix)/bin" >> "$GITHUB_PATH"
 
       - name: Install Android command-line tools and SDK components
         run: |
@@ -117,8 +121,28 @@ jobs:
         run: |
           set -euo pipefail
           chmod +x ./android.sh
-          ./android.sh -d --lts --full --enable-gpl \
+          git fetch --tags --force || true
+          echo "=== git describe (android.sh needs this) ==="
+          git describe --tags --always || true
+          echo "=== disk ==="
+          df -h .
+          dump_logs() {
+            echo "========== tail build.log =========="
+            tail -n 250 build.log 2>/dev/null || echo "(no build.log)"
+            echo "========== tail ffbuild/config.log =========="
+            tail -n 120 src/ffmpeg/ffbuild/config.log 2>/dev/null || echo "(no config.log)"
+            echo "========== tail: last native build lines (grep -i error) =========="
+            grep -i -n -E 'error:|fatal:|failed|\(\*\)' build.log 2>/dev/null | tail -n 40 || true
+          }
+          set +e
+          bash ./android.sh -d --lts --full --enable-gpl \
             --enable-android-media-codec --enable-android-zlib
+          rc=$?
+          set -e
+          if [[ "${rc}" -ne 0 ]]; then
+            dump_logs
+            exit "${rc}"
+          fi
 
       - name: Stage release asset
         id: stage
