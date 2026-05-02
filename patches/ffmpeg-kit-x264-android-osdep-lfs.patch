@@ -1,0 +1,16 @@
+diff --git a/src/x264/common/osdep.h b/src/x264/common/osdep.h
+--- a/src/x264/common/osdep.h
++++ b/src/x264/common/osdep.h
+@@ -28,8 +28,12 @@
+ #ifndef X264_OSDEP_H
+ #define X264_OSDEP_H
+ 
+ #define _LARGEFILE_SOURCE 1
++/* ffmpeg-kit-android: NDK r28+ Clang errors on fseek→fseeko macro without a visible fseeko prototype. */
++#if !defined(__ANDROID__)
+ #define _FILE_OFFSET_BITS 64
++#endif
+ #include <stdio.h>
+ #include <sys/stat.h>
+ #include <inttypes.h>
++
