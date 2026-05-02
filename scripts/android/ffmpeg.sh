@@ -412,6 +412,42 @@ else
   echo -e "\nINFO: Enabled custom ffmpeg-kit protocols\n" 1>>"${BASEDIR}"/build.log 2>&1
 fi
 
+# 3. Dual TLS: libavformat/protocols.c is reverted by git checkout + SAF awk above.
+#    Generated libavformat/protocol_list.c appears only after ./configure — patch it in step 4 below.
+if grep -q 'ffmpeg-kit: allow both TLS backends' "${BASEDIR}/src/${LIB_NAME}/configure" 2>/dev/null; then
+  echo -e "INFO: Re-applying dual-TLS declarations in libavformat/protocols.c\n" 1>>"${BASEDIR}"/build.log 2>&1
+  python3 - "${BASEDIR}/src/${LIB_NAME}/libavformat/protocols.c" <<'PY' || return 1
+import sys
+from pathlib import Path
+
+path = Path(sys.argv[1])
+t = path.read_text()
+if "ff_tls_gnutls_protocol" in t:
+    sys.exit(0)
+inc = '#include "config.h"\n#include "config_components.h"\n'
+needle = '#include "url.h"\n'
+if inc.strip() not in t:
+    if needle not in t:
+        sys.stderr.write("protocols.c: missing url.h include\n")
+        sys.exit(1)
+    t = t.replace(needle, needle + "\n" + inc, 1)
+old_extern = "extern const URLProtocol ff_tls_protocol;\n"
+new_extern = (
+    "#if CONFIG_GNUTLS\n"
+    "extern const URLProtocol ff_tls_gnutls_protocol;\n"
+    "#endif\n"
+    "#if CONFIG_OPENSSL\n"
+    "extern const URLProtocol ff_tls_openssl_protocol;\n"
+    "#endif\n"
+)
+if old_extern not in t:
+    sys.stderr.write("protocols.c: expected ff_tls_protocol extern not found\n")
+    sys.exit(1)
+t = t.replace(old_extern, new_extern, 1)
+path.write_text(t)
+PY
+fi
+
 ###################################################################
 
 ./configure \
@@ -476,6 +512,39 @@ fi
 if [[ $? -ne 0 ]]; then
   echo -e "failed\n\nSee build.log for details\n"
   exit 1
+fi
+
+# 4. dual TLS: protocol_list.c is emitted by ./configure — rewrite &ff_tls_protocol before make.
+if grep -q 'ffmpeg-kit: allow both TLS backends' "${BASEDIR}/src/${LIB_NAME}/configure" 2>/dev/null; then
+  PL="${BASEDIR}/src/${LIB_NAME}/libavformat/protocol_list.c"
+  if [[ -f "${PL}" ]]; then
+    echo -e "INFO: Patching generated libavformat/protocol_list.c for dual TLS\n" 1>>"${BASEDIR}"/build.log 2>&1
+    python3 - "${PL}" <<'PY' || exit 1
+import re
+import sys
+from pathlib import Path
+p = Path(sys.argv[1])
+t = p.read_text()
+if "ff_tls_gnutls_protocol" in t:
+    sys.exit(0)
+m = re.search(r"^(\s*)&ff_tls_protocol,\s*$", t, re.M)
+if not m:
+    sys.stderr.write("protocol_list.c: &ff_tls_protocol line not found\n")
+    sys.exit(1)
+ind = m.group(1)
+old_line = m.group(0)
+new = (
+    f"{ind}#if CONFIG_GNUTLS\n"
+    f"{ind}&ff_tls_gnutls_protocol,\n"
+    f"{ind}#endif\n"
+    f"{ind}#if CONFIG_OPENSSL\n"
+    f"{ind}&ff_tls_openssl_protocol,\n"
+    f"{ind}#endif\n"
+)
+t = t.replace(old_line, new, 1)
+p.write_text(t)
+PY
+  fi
 fi
 
 if [[ -z ${NO_OUTPUT_REDIRECTION} ]]; then

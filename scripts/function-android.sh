@@ -95,19 +95,32 @@ APP_LDFLAGS := "-Wl,-z,max-page-size=16384,--hash-style=both"
 EOF
 }
 
+# NDK r26+ only installs *-clang binaries for API 21+; lower levels (e.g. LTS API 16)
+# still set __ANDROID_MIN_SDK_VERSION__ / APP_PLATFORM from ${API} for runtime compatibility.
+get_toolchain_clang_api() {
+  local min_clang_api=21
+  if [[ ${API} -lt ${min_clang_api} ]]; then
+    echo "${min_clang_api}"
+  else
+    echo "${API}"
+  fi
+}
+
 get_clang_host() {
+  local clang_api
+  clang_api=$(get_toolchain_clang_api)
   case ${ARCH} in
   arm-v7a | arm-v7a-neon)
-    echo "armv7a-linux-androideabi${API}"
+    echo "armv7a-linux-androideabi${clang_api}"
     ;;
   arm64-v8a)
-    echo "aarch64-linux-android${API}"
+    echo "aarch64-linux-android${clang_api}"
     ;;
   x86)
-    echo "i686-linux-android${API}"
+    echo "i686-linux-android${clang_api}"
     ;;
   x86-64)
-    echo "x86_64-linux-android${API}"
+    echo "x86_64-linux-android${clang_api}"
     ;;
   esac
 }

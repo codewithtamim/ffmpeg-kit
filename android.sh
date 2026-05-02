@@ -211,6 +211,12 @@ download_gnu_config
 
 # DOWNLOAD LIBRARY SOURCES
 downloaded_library_sources "${ENABLED_LIBRARIES[@]}"
+# android-ffmpeg-kit: post-download C/CMake patches (C23, CMake 4.x)
+if [[ -n "${ANDROID_PATCH_ROOT:-}" ]] && [[ -f "${ANDROID_PATCH_ROOT}/patches/android-apply-patches.sh" ]]; then
+  echo "Applying Android patches..."
+  ANDROID_PATCH_ROOT="${ANDROID_PATCH_ROOT}" BASEDIR="${BASEDIR}" bash "${ANDROID_PATCH_ROOT}/patches/android-apply-patches.sh" || exit 1
+fi
+
 
 # SAVE ORIGINAL API LEVEL = NECESSARY TO BUILD 64bit ARCHITECTURES
 export ORIGINAL_API=${API}
@@ -344,11 +350,10 @@ if [[ -n ${ANDROID_ARCHITECTURES} ]]; then
 
   # BUILD NATIVE LIBRARY
   if [[ ${SKIP_ffmpeg_kit} -ne 1 ]]; then
-    if [ "$(is_darwin_arm64)" == "1" ]; then
-       arch -x86_64 "${ANDROID_NDK_ROOT}"/ndk-build -B 1>>"${BASEDIR}"/build.log 2>&1
-    else
-      "${ANDROID_NDK_ROOT}"/ndk-build -B 1>>"${BASEDIR}"/build.log 2>&1
-    fi
+    # NDK r23+ ships universal arm64+x86_64 host binaries under toolchains/llvm/prebuilt/darwin-x86_64.
+    # Do not wrap ndk-build in `arch -x86_64`: that requires Rosetta and can fail with "Bad CPU type"
+    # on Apple Silicon when x86_64 userspace is unavailable or /bin/sh cannot run under that arch.
+    "${ANDROID_NDK_ROOT}"/ndk-build -B 1>>"${BASEDIR}"/build.log 2>&1
 
     if [ $? -eq 0 ]; then
       echo "ok"

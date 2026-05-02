@@ -376,6 +376,22 @@ apply_tiff_cmake() {
   return 0
 }
 
+apply_ffmpeg_dual_tls() {
+  local patch="${PATCH_ROOT}/ffmpeg-kit-ffmpeg-dual-tls.patch"
+  local mark="${BASEDIR}/src/ffmpeg/configure"
+  [[ -f "${mark}" ]] || return 0
+  if grep -q 'ffmpeg-kit: allow both TLS backends' "${mark}"; then
+    return 0
+  fi
+  if [[ ! -f "${patch}" ]]; then
+    echo "ERROR: missing ${patch}" >&2
+    return 1
+  fi
+
+  echo "Applying FFmpeg dual TLS (GnuTLS + OpenSSL) patch..."
+  (cd "${BASEDIR}" && patch -p1 --fuzz=2 <"${patch}") || return 1
+}
+
 # Main execution
 echo "==============================================="
 echo "Applying Android FFmpeg-Kit patches"
@@ -384,6 +400,7 @@ echo "==============================================="
 apply_shine_l3mdct
 apply_xvid_encoder_c23_bool
 apply_gnutls_configure_ac_gettext
+apply_ffmpeg_dual_tls
 apply_libvidstab_cmake
 apply_snappy_cmake
 apply_chromaprint_cmake

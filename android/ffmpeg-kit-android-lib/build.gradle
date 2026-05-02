@@ -8,10 +8,10 @@ android {
     ndkVersion "22.1.7171670"
 
     defaultConfig {
-        minSdk 24
+        minSdk 16
         targetSdk 35
-        versionCode 240600
-        versionName "6.0"
+        versionCode 160600
+        versionName "6.0.LTS"
         project.archivesBaseName = "ffmpeg-kit"
         consumerProguardFiles "consumer-rules.pro"
     }
@@ -24,8 +24,8 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_11
-        targetCompatibility JavaVersion.VERSION_11
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
 
     sourceSets {

@@ -1,0 +1,273 @@
+diff --git a/src/ffmpeg/configure b/src/ffmpeg/configure
+--- a/src/ffmpeg/configure
++++ b/src/ffmpeg/configure
+@@ -4295,8 +4295,9 @@ else
+     license="LGPL version 2.1 or later"
+ fi
+ 
+-enabled_all gnutls openssl &&
+-    die "GnuTLS and OpenSSL must not be enabled at the same time."
++# ffmpeg-kit: allow both TLS backends (see tls_*.c; protocol_list is adjusted after ./configure).
++# enabled_all gnutls openssl &&
++#     die "GnuTLS and OpenSSL must not be enabled at the same time."
+ 
+ enabled_all gnutls mbedtls &&
+     die "GnuTLS and mbedTLS must not be enabled at the same time."
+
+diff --git a/src/ffmpeg/libavformat/protocols.c b/src/ffmpeg/libavformat/protocols.c
+--- a/src/ffmpeg/libavformat/protocols.c
++++ b/src/ffmpeg/libavformat/protocols.c
+@@ -16,6 +16,8 @@
+  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+  */
+ 
++#include "config.h"
++#include "config_components.h"
+ #include "libavutil/avstring.h"
+ #include "libavutil/log.h"
+ #include "libavutil/mem.h"
+@@ -59,7 +61,12 @@ extern const URLProtocol ff_subfile_protocol;
+ extern const URLProtocol ff_tee_protocol;
+ extern const URLProtocol ff_tcp_protocol;
+-extern const URLProtocol ff_tls_protocol;
++#if CONFIG_GNUTLS
++extern const URLProtocol ff_tls_gnutls_protocol;
++#endif
++#if CONFIG_OPENSSL
++extern const URLProtocol ff_tls_openssl_protocol;
++#endif
+ extern const URLProtocol ff_udp_protocol;
+ extern const URLProtocol ff_udplite_protocol;
+ extern const URLProtocol ff_unix_protocol;
+
+diff --git a/src/ffmpeg/libavformat/Makefile b/src/ffmpeg/libavformat/Makefile
+--- a/src/ffmpeg/libavformat/Makefile
++++ b/src/ffmpeg/libavformat/Makefile
+@@ -686,6 +686,10 @@ TLS-OBJS-$(CONFIG_OPENSSL)               += tls_openssl.o
+ TLS-OBJS-$(CONFIG_SECURETRANSPORT)       += tls_securetransport.o
+ TLS-OBJS-$(CONFIG_SCHANNEL)              += tls_schannel.o
+ OBJS-$(CONFIG_TLS_PROTOCOL)              += tls.o $(TLS-OBJS-yes)
++# ffmpeg-kit: dual TLS enables tls_gnutls + tls_openssl components without CONFIG_TLS_PROTOCOL.
++OBJS-$(CONFIG_TLS_GNUTLS_PROTOCOL)       += tls.o $(TLS-OBJS-yes)
++OBJS-$(CONFIG_TLS_OPENSSL_PROTOCOL)      += tls.o $(TLS-OBJS-yes)
+ OBJS-$(CONFIG_UDP_PROTOCOL)              += udp.o ip.o
+ OBJS-$(CONFIG_UDPLITE_PROTOCOL)          += udp.o ip.o
+ OBJS-$(CONFIG_UNIX_PROTOCOL)             += unix.o
+
+diff --git a/src/ffmpeg/libavformat/tls_gnutls.c b/src/ffmpeg/libavformat/tls_gnutls.c
+--- a/src/ffmpeg/libavformat/tls_gnutls.c
++++ b/src/ffmpeg/libavformat/tls_gnutls.c
+@@ -19,6 +19,7 @@
+  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+  */
+ 
++#include "config.h"
+ #include <errno.h>
+ 
+ #include <gnutls/gnutls.h>
+@@ -299,8 +300,14 @@ static const AVClass tls_class = {
+     .version    = LIBAVUTIL_VERSION_INT,
+ };
+ 
+-const URLProtocol ff_tls_protocol = {
+-    .name           = "tls",
++#if CONFIG_OPENSSL
++#define FFMPEG_KIT_TLS_GNUTLS_SCHEME "tls_gnutls"
++#else
++#define FFMPEG_KIT_TLS_GNUTLS_SCHEME "tls"
++#endif
++
++const URLProtocol ff_tls_gnutls_protocol = {
++    .name           = FFMPEG_KIT_TLS_GNUTLS_SCHEME,
+     .url_open2      = tls_open,
+     .url_read       = tls_read,
+     .url_write      = tls_write,
+@@ -311,3 +318,4 @@ const URLProtocol ff_tls_protocol = {
+     .flags          = URL_PROTOCOL_FLAG_NETWORK,
+     .priv_data_class = &tls_class,
+ };
++#undef FFMPEG_KIT_TLS_GNUTLS_SCHEME
+
+diff --git a/src/ffmpeg/libavformat/tls_openssl.c b/src/ffmpeg/libavformat/tls_openssl.c
+--- a/src/ffmpeg/libavformat/tls_openssl.c
++++ b/src/ffmpeg/libavformat/tls_openssl.c
+@@ -19,6 +19,7 @@
+  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+  */
+ 
++#include "config.h"
+ #include "avformat.h"
+ #include "internal.h"
+ #include "network.h"
+@@ -385,8 +386,14 @@ static const AVClass tls_class = {
+     .version    = LIBAVUTIL_VERSION_INT,
+ };
+ 
+-const URLProtocol ff_tls_protocol = {
+-    .name           = "tls",
++#if CONFIG_GNUTLS
++#define FFMPEG_KIT_TLS_OPENSSL_SCHEME "tls_openssl"
++#else
++#define FFMPEG_KIT_TLS_OPENSSL_SCHEME "tls"
++#endif
++
++const URLProtocol ff_tls_openssl_protocol = {
++    .name           = FFMPEG_KIT_TLS_OPENSSL_SCHEME,
+     .url_open2      = tls_open,
+     .url_read       = tls_read,
+     .url_write      = tls_write,
+@@ -397,3 +404,4 @@ const URLProtocol ff_tls_protocol = {
+     .flags          = URL_PROTOCOL_FLAG_NETWORK,
+     .priv_data_class = &tls_class,
+ };
++#undef FFMPEG_KIT_TLS_OPENSSL_SCHEME
+
+diff --git a/src/ffmpeg/libavformat/tls.c b/src/ffmpeg/libavformat/tls.c
+--- a/src/ffmpeg/libavformat/tls.c
++++ b/src/ffmpeg/libavformat/tls.c
+@@ -110,8 +110,26 @@ int ff_tls_open_underlying(TLSShared *c, URLContext *parent, const char *uri, AV
+                     proxy_port, "/%s", dest);
+     }
+ 
+     freeenv_utf8(env_http_proxy);
+     return ffurl_open_whitelist(&c->tcp, buf, AVIO_FLAG_READ_WRITE,
+                                 &parent->interrupt_callback, options,
+                                 parent->protocol_whitelist, parent->protocol_blacklist, parent);
+ }
++
++const char *ff_tls_proto_name_for_url(void)
++{
++#if CONFIG_GNUTLS && CONFIG_OPENSSL
++    char *v = getenv_utf8("FFMPEG_HTTPS_TLS");
++    const char *ret = "tls_gnutls";
++    if (v) {
++        if (!av_strcasecmp(v, "openssl"))
++            ret = "tls_openssl";
++        else if (!av_strcasecmp(v, "gnutls"))
++            ret = "tls_gnutls";
++        freeenv_utf8(v);
++    }
++    return ret;
++#else
++    return "tls";
++#endif
++}
+
+diff --git a/src/ffmpeg/libavformat/tls.h b/src/ffmpeg/libavformat/tls.h
+--- a/src/ffmpeg/libavformat/tls.h
++++ b/src/ffmpeg/libavformat/tls.h
+@@ -59,6 +59,9 @@ int ff_tls_open_underlying(TLSShared *c, URLContext *parent, const char *uri, AV
+ void ff_gnutls_init(void);
+ void ff_gnutls_deinit(void);
+ 
++/* Both enabled: tls_gnutls + tls_openssl; https uses FFMPEG_HTTPS_TLS=openssl|gnutls (default gnutls). */
++const char *ff_tls_proto_name_for_url(void);
++
+ int ff_openssl_init(void);
+ void ff_openssl_deinit(void);
+ 
+
+diff --git a/src/ffmpeg/libavformat/http.c b/src/ffmpeg/libavformat/http.c
+--- a/src/ffmpeg/libavformat/http.c
++++ b/src/ffmpeg/libavformat/http.c
+@@ -40,6 +40,7 @@
+ #include "internal.h"
+ #include "network.h"
+ #include "os_support.h"
++#include "tls.h"
+ #include "url.h"
+ #include "version.h"
+ 
+@@ -223,7 +224,7 @@ static int http_open_cnx(URLContext *h, AVDictionary **options)
+     freeenv_utf8(env_no_proxy);
+ 
+     if (!strcmp(proto, "https")) {
+-        lower_proto = "tls";
++        lower_proto = ff_tls_proto_name_for_url();
+         use_proxy   = 0;
+         if (port < 0)
+             port = 443;
+@@ -657,7 +658,7 @@ static int http_listen(URLContext *h, const char *uri, int flags,
+     av_url_split(proto, sizeof(proto), NULL, 0, hostname, sizeof(hostname), &port,
+                  NULL, 0, uri);
+     if (!strcmp(proto, "https"))
+-        lower_proto = "tls";
++        lower_proto = ff_tls_proto_name_for_url();
+     ff_url_join(lower_url, sizeof(lower_url), lower_proto, NULL, hostname, port,
+                 NULL);
+     if ((ret = av_dict_set_int(options, "listen", s->listen, 0)) < 0)
+
+diff --git a/src/ffmpeg/libavformat/gopher.c b/src/ffmpeg/libavformat/gopher.c
+--- a/src/ffmpeg/libavformat/gopher.c
++++ b/src/ffmpeg/libavformat/gopher.c
+@@ -30,6 +30,7 @@
+ #include "avformat.h"
+ #include "internal.h"
+ #include "network.h"
++#include "tls.h"
+ #include "url.h"
+ 
+ typedef struct GopherContext {
+@@ -93,7 +94,7 @@ static int gopher_open(URLContext *h, const char *uri, int flags)
+         port = 70;
+ 
+     if (!strcmp(proto, "gophers"))
+-        lower_proto = "tls";
++        lower_proto = ff_tls_proto_name_for_url();
+ 
+     ff_url_join(buf, sizeof(buf), lower_proto, NULL, hostname, port, NULL);
+ 
+diff --git a/src/ffmpeg/libavformat/rtmpproto.c b/src/ffmpeg/libavformat/rtmpproto.c
+--- a/src/ffmpeg/libavformat/rtmpproto.c
++++ b/src/ffmpeg/libavformat/rtmpproto.c
+@@ -38,6 +38,7 @@
+ #include "internal.h"
+ 
+ #include "network.h"
++#include "tls.h"
+ 
+ #include "flv.h"
+ #include "rtmp.h"
+@@ -2642,7 +2643,7 @@ static int rtmp_open(URLContext *s, const char *uri, int flags, AVDictionary **op
+         /* open the tls connection */
+         if (port < 0)
+             port = RTMPS_DEFAULT_PORT;
+-        ff_url_join(buf, sizeof(buf), "tls", NULL, hostname, port, NULL);
++        ff_url_join(buf, sizeof(buf), ff_tls_proto_name_for_url(), NULL, hostname, port, NULL);
+     } else if (!strcmp(proto, "rtmpe") || (!strcmp(proto, "rtmpte"))) {
+         if (!strcmp(proto, "rtmpte"))
+             av_dict_set(opts, "ffrtmpcrypt_tunneling", "1", 1);
+
+diff --git a/src/ffmpeg/libavformat/rtspdec.c b/src/ffmpeg/libavformat/rtspdec.c
+--- a/src/ffmpeg/libavformat/rtspdec.c
++++ b/src/ffmpeg/libavformat/rtspdec.c
+@@ -673,7 +673,7 @@ static int rtsp_listen(AVFormatContext *s)
+                 port, "%s", path);
+ 
+     if (!strcmp(proto, "rtsps")) {
+-        lower_proto  = "tls";
++        lower_proto  = ff_tls_proto_name_for_url();
+         default_port = RTSPS_DEFAULT_PORT;
+     }
+ 
+
+diff --git a/src/ffmpeg/libavformat/rtsp.c b/src/ffmpeg/libavformat/rtsp.c
+--- a/src/ffmpeg/libavformat/rtsp.c
++++ b/src/ffmpeg/libavformat/rtsp.c
+@@ -43,6 +43,7 @@
+ #include "network.h"
+ #include "os_support.h"
+ #include "http.h"
++#include "tls.h"
+ #include "rtsp.h"
+ 
+ #include "rtpdec.h"
+@@ -1761,7 +1762,7 @@ redirect:
+                  host, sizeof(host), &port, path, sizeof(path), s->url);
+ 
+     if (!strcmp(proto, "rtsps")) {
+-        lower_rtsp_proto         = "tls";
++        lower_rtsp_proto         = ff_tls_proto_name_for_url();
+         default_port             = RTSPS_DEFAULT_PORT;
+         rt->lower_transport_mask = 1 << RTSP_LOWER_TRANSPORT_TCP;
+     } else if (!strcmp(proto, "satip")) {

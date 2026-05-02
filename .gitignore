@@ -1,5 +1,16 @@
-/.tmp/
+.tmp/
+.android-sdk/
+*.log
 /*.log
 /prebuilt/
+release-assets/
+*.out
 .DS_Store
 .idea
+**/local.properties
+android/.gradle/
+android/.cxx/
+android/libs/
+android/obj/
+android/**/build/
+ffmpeg-kit-spm/
