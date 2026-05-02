@@ -356,6 +356,8 @@ if [[ -n ${ANDROID_ARCHITECTURES} ]]; then
     "${ANDROID_NDK_ROOT}"/ndk-build -B 1>>"${BASEDIR}"/build.log 2>&1
 
     if [ $? -eq 0 ]; then
+      # 32-bit NDK libc++_shared prebuilts use 4KB segment alignment; relink for 16KB-page devices.
+      bash "${BASEDIR}/scripts/android/relink-libcxx-16kb.sh" 1>>"${BASEDIR}"/build.log 2>&1 || exit 1
       echo "ok"
     else
       echo "failed"
