@@ -13,14 +13,25 @@ if [[ -z "${ANDROID_NDK_ROOT:-}" ]]; then
   exit 1
 fi
 
-case "$(uname -s)" in
-Linux*) PREBUILT=linux-x86_64 ;;
-Darwin*) PREBUILT=darwin-x86_64 ;;
-*)
+PREBUILT_DIR="${ANDROID_NDK_ROOT}/toolchains/llvm/prebuilt"
+if [[ "$(uname -s)" == "Linux" ]]; then
+  PREBUILT=linux-x86_64
+elif [[ "$(uname -s)" == "Darwin" ]]; then
+  PREBUILT=""
+  for cand in darwin-arm64 darwin-x86_64; do
+    if [[ -d "${PREBUILT_DIR}/${cand}" ]]; then
+      PREBUILT="${cand}"
+      break
+    fi
+  done
+  if [[ -z "${PREBUILT}" ]]; then
+    echo "ERROR: no darwin prebuilt under ${PREBUILT_DIR}" >&2
+    exit 1
+  fi
+else
   echo "ERROR: unsupported host for libc++ relink" >&2
   exit 1
-  ;;
-esac
+fi
 
 BIN="${ANDROID_NDK_ROOT}/toolchains/llvm/prebuilt/${PREBUILT}/bin"
 SYS="${ANDROID_NDK_ROOT}/toolchains/llvm/prebuilt/${PREBUILT}/sysroot"
