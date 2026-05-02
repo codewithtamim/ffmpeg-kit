@@ -6,6 +6,17 @@ set -euo pipefail
 
 PATCH_ROOT="${ANDROID_PATCH_ROOT}/patches"
 
+# Prefer GNU patch when available (`brew install gpatch` on macOS). GitHub-hosted
+# macOS images ship BSD patch, which rejects some unified diffs that GNU patch
+# (and typical Linux / Homebrew setups) apply without error.
+patch_p1() {
+  if command -v gpatch >/dev/null 2>&1; then
+    gpatch "$@"
+  else
+    patch "$@"
+  fi
+}
+
 echo "Android Patch Root: $ANDROID_PATCH_ROOT"
 echo "Base Directory: $BASEDIR"
 echo "Patch Directory: $PATCH_ROOT"
@@ -26,7 +37,7 @@ apply_shine_l3mdct() {
     perl -i -pe 's/\r\n/\n/g; s/\r/\n/g' "${hdr}"
   fi
 
-  if [[ -f "${patch}" ]] && ( cd "${BASEDIR}" && patch -p1 --fuzz=2 < "${patch}" ); then
+  if [[ -f "${patch}" ]] && ( cd "${BASEDIR}" && patch_p1 -p1 --fuzz=2 < "${patch}" ); then
     return 0
   fi
 
@@ -56,7 +67,7 @@ apply_xvid_encoder_c23_bool() {
     perl -i -pe 's/\r\n/\n/g; s/\r/\n/g' "${hdr}"
   fi
 
-  if [[ -f "${patch}" ]] && ( cd "${BASEDIR}" && patch -p1 --fuzz=2 < "${patch}" ); then
+  if [[ -f "${patch}" ]] && ( cd "${BASEDIR}" && patch_p1 -p1 --fuzz=2 < "${patch}" ); then
     return 0
   fi
 
@@ -98,7 +109,7 @@ apply_gnutls_configure_ac_gettext() {
   fi
 
   echo "Applying gnutls configure.ac gettext/autopoint fix (duplicate AM_GNU_GETTEXT_REQUIRE_VERSION)..."
-  if [[ -f "${patch}" ]] && ( cd "${BASEDIR}" && patch -p1 --fuzz=2 < "${patch}" ); then
+  if [[ -f "${patch}" ]] && ( cd "${BASEDIR}" && patch_p1 -p1 --fuzz=2 < "${patch}" ); then
     return 0
   fi
 
@@ -140,7 +151,7 @@ apply_libvidstab_cmake() {
   fi
 
   echo "Applying libvidstab CMakeLists cmake_minimum_required >= 3.5 (CMake 4.x)..."
-  if [[ -f "${patch}" ]] && ( cd "${BASEDIR}" && patch -p1 --fuzz=2 < "${patch}" ); then
+  if [[ -f "${patch}" ]] && ( cd "${BASEDIR}" && patch_p1 -p1 --fuzz=2 < "${patch}" ); then
     return 0
   fi
 
@@ -162,7 +173,7 @@ apply_snappy_cmake() {
   fi
 
   echo "Applying snappy CMakeLists cmake_minimum_required >= 3.5 (CMake 4.x)..."
-  if [[ -f "${patch}" ]] && ( cd "${BASEDIR}" && patch -p1 --fuzz=2 < "${patch}" ); then
+  if [[ -f "${patch}" ]] && ( cd "${BASEDIR}" && patch_p1 -p1 --fuzz=2 < "${patch}" ); then
     return 0
   fi
 
@@ -184,7 +195,7 @@ apply_chromaprint_cmake() {
   fi
 
   echo "Applying chromaprint CMakeLists cmake_minimum_required >= 3.5 (CMake 4.x)..."
-  if [[ -f "${patch}" ]] && ( cd "${BASEDIR}" && patch -p1 --fuzz=2 < "${patch}" ); then
+  if [[ -f "${patch}" ]] && ( cd "${BASEDIR}" && patch_p1 -p1 --fuzz=2 < "${patch}" ); then
     return 0
   fi
 
@@ -206,7 +217,7 @@ apply_soxr_cmake() {
   fi
 
   echo "Applying soxr CMakeLists cmake_minimum_required >= 3.5 (CMake 4.x)..."
-  if [[ -f "${patch}" ]] && ( cd "${BASEDIR}" && patch -p1 --fuzz=2 < "${patch}" ); then
+  if [[ -f "${patch}" ]] && ( cd "${BASEDIR}" && patch_p1 -p1 --fuzz=2 < "${patch}" ); then
     return 0
   fi
 
@@ -228,7 +239,7 @@ apply_libsamplerate_cmake() {
   fi
 
   echo "Applying libsamplerate CMakeLists cmake_minimum lower bound >= 3.5 (CMake 4.x)..."
-  if [[ -f "${patch}" ]] && ( cd "${BASEDIR}" && patch -p1 --fuzz=2 < "${patch}" ); then
+  if [[ -f "${patch}" ]] && ( cd "${BASEDIR}" && patch_p1 -p1 --fuzz=2 < "${patch}" ); then
     return 0
   fi
 
@@ -250,7 +261,7 @@ apply_libsndfile_cmake() {
   fi
 
   echo "Applying libsndfile CMakeLists cmake_minimum lower bound >= 3.5 (CMake 4.x)..."
-  if [[ -f "${patch}" ]] && ( cd "${BASEDIR}" && patch -p1 --fuzz=2 < "${patch}" ); then
+  if [[ -f "${patch}" ]] && ( cd "${BASEDIR}" && patch_p1 -p1 --fuzz=2 < "${patch}" ); then
     return 0
   fi
 
@@ -272,7 +283,7 @@ apply_sdl_cmake() {
   fi
 
   echo "Applying SDL CMakeLists cmake_minimum_required >= 3.5 (CMake 4.x)..."
-  if [[ -f "${patch}" ]] && ( cd "${BASEDIR}" && patch -p1 --fuzz=2 < "${patch}" ); then
+  if [[ -f "${patch}" ]] && ( cd "${BASEDIR}" && patch_p1 -p1 --fuzz=2 < "${patch}" ); then
     return 0
   fi
 
@@ -294,7 +305,7 @@ apply_jpeg_cmake() {
   fi
 
   echo "Applying libjpeg-turbo (jpeg) CMakeLists cmake_minimum_required >= 3.5 (CMake 4.x)..."
-  if [[ -f "${patch}" ]] && ( cd "${BASEDIR}" && patch -p1 --fuzz=2 < "${patch}" ); then
+  if [[ -f "${patch}" ]] && ( cd "${BASEDIR}" && patch_p1 -p1 --fuzz=2 < "${patch}" ); then
     return 0
   fi
 
@@ -316,7 +327,7 @@ apply_libpng_cmake() {
   fi
 
   echo "Applying libpng CMakeLists cmake_minimum / cmake_policy >= 3.5 (CMake 4.x)..."
-  if [[ -f "${patch}" ]] && ( cd "${BASEDIR}" && patch -p1 --fuzz=2 < "${patch}" ); then
+  if [[ -f "${patch}" ]] && ( cd "${BASEDIR}" && patch_p1 -p1 --fuzz=2 < "${patch}" ); then
     return 0
   fi
 
@@ -341,7 +352,7 @@ apply_srt_cmake() {
   fi
 
   echo "Applying srt CMakeLists cmake_minimum_required >= 3.5 (CMake 4.x)..."
-  if [[ -f "${patch}" ]] && ( cd "${BASEDIR}" && patch -p1 --fuzz=2 < "${patch}" ); then
+  if [[ -f "${patch}" ]] && ( cd "${BASEDIR}" && patch_p1 -p1 --fuzz=2 < "${patch}" ); then
     return 0
   fi
 
@@ -363,7 +374,7 @@ apply_tiff_cmake() {
   fi
 
   echo "Applying libtiff CMakeLists cmake_minimum / cmake_policy >= 3.5 (CMake 4.x)..."
-  if [[ -f "${patch}" ]] && ( cd "${BASEDIR}" && patch -p1 --fuzz=2 < "${patch}" ); then
+  if [[ -f "${patch}" ]] && ( cd "${BASEDIR}" && patch_p1 -p1 --fuzz=2 < "${patch}" ); then
     return 0
   fi
 
@@ -389,7 +400,7 @@ apply_ffmpeg_dual_tls() {
   fi
 
   echo "Applying FFmpeg dual TLS (GnuTLS + OpenSSL) patch..."
-  (cd "${BASEDIR}" && patch -p1 --fuzz=2 <"${patch}") || return 1
+  (cd "${BASEDIR}" && patch_p1 -p1 --fuzz=2 <"${patch}") || return 1
 }
 
 # Main execution
