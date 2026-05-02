@@ -403,6 +403,22 @@ apply_ffmpeg_dual_tls() {
   (cd "${BASEDIR}" && patch_p1 -p1 --fuzz=2 <"${patch}") || return 1
 }
 
+apply_x264_android_osdep_lfs() {
+  local hdr="${BASEDIR}/src/x264/common/osdep.h"
+  local patch="${PATCH_ROOT}/ffmpeg-kit-x264-android-osdep-lfs.patch"
+  [[ -f "${hdr}" ]] || return 0
+  if grep -q 'ffmpeg-kit-android: NDK r28' "${hdr}"; then
+    return 0
+  fi
+  if [[ ! -f "${patch}" ]]; then
+    echo "ERROR: missing ${patch}" >&2
+    return 1
+  fi
+
+  echo "Applying x264 Android osdep.h LFS / fseeko fix (NDK Clang)..."
+  (cd "${BASEDIR}" && patch_p1 -p1 --fuzz=2 <"${patch}") || return 1
+}
+
 # Main execution
 echo "==============================================="
 echo "Applying Android FFmpeg-Kit patches"
@@ -412,6 +428,7 @@ apply_shine_l3mdct
 apply_xvid_encoder_c23_bool
 apply_gnutls_configure_ac_gettext
 apply_ffmpeg_dual_tls
+apply_x264_android_osdep_lfs
 apply_libvidstab_cmake
 apply_snappy_cmake
 apply_chromaprint_cmake
